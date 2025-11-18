@@ -7,7 +7,34 @@ resource "aws_instance" "catalogue" {
     tags = merge (
         local.common_tags,
         {
-            Name = "${local.common_name_suffix}-catalogue"
+            Name = "${local.common_name_suffix}-catalogue" # roboshop-dev-mongodb
         }
     )
+}
+
+# Connect to instance using remote-exec provisioner through terraform_data
+resource "terraform_data" "catalogue" {
+  triggers_replace = [
+    aws_instance.catalogue.id
+  ]
+  
+  connection {
+    type     = "ssh"
+    user     = "ec2-user"
+    password = "DevOps321"
+    host     = aws_instance.catalogue.private_ip
+  }
+
+  # terraform copies this file to catalogue server
+  provisioner "file" {
+    source = "catalogue.sh"
+    destination = "/tmp/catalogue.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+        "chmod +x /tmp/catalogue.sh",
+        "sudo sh /tmp/catalogue.sh catalogue"
+        ]
+  }
 }
