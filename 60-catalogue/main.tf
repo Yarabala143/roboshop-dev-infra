@@ -39,41 +39,41 @@ resource "terraform_data" "catalogue" {
   }
 }
 
-  # stop the instance to take image
-  resource "aws_ec2_instance_state" "catalogue" {
-    instance_id = aws_instance.catalogue.id
-    state       = "stopped"
-    depends_on = [terraform_data.catalogue]
-  }
+# stop the instance to take image
+resource "aws_ec2_instance_state" "catalogue" {
+  instance_id = aws_instance.catalogue.id
+  state       = "stopped"
+  depends_on = [terraform_data.catalogue]
+}
 
-  resource "aws_ami_from_instance" "catalogue" {
-    name               = "${local.common_name_suffix}-catalogue-ami"
-    source_instance_id = aws_instance.catalogue.id
-    depends_on = [aws_ec2_instance_state.catalogue]
-    tags = merge (
-          local.common_tags,
-          {
-              Name = "${local.common_name_suffix}-catalogue-ami" # roboshop-dev-mongodb
-          }
-    )
-  }
+resource "aws_ami_from_instance" "catalogue" {
+  name               = "${local.common_name_suffix}-catalogue-ami"
+  source_instance_id = aws_instance.catalogue.id
+  depends_on = [aws_ec2_instance_state.catalogue]
+  tags = merge (
+        local.common_tags,
+        {
+            Name = "${local.common_name_suffix}-catalogue-ami" # roboshop-dev-mongodb
+        }
+  )
+}
 
-  resource "aws_lb_target_group" "catalogue" {
-  name     = "${local.common_name_suffix}-catalogue"
-  port     = 8080
+resource "aws_lb_target_group" "catalogue" {
+name     = "${local.common_name_suffix}-catalogue"
+port     = 8080
+protocol = "HTTP"
+vpc_id   = local.vpc_id
+deregistration_delay = 60 # waiting period before deleting the instance
+
+health_check {
+  healthy_threshold = 2
+  interval = 10
+  matcher = "200-299"
+  path = "/health"
+  port = 8080
   protocol = "HTTP"
-  vpc_id   = local.vpc_id
-  deregistration_delay = 60 # waiting period before deleting the instance
-
-  health_check {
-    healthy_threshold = 2
-    interval = 10
-    matcher = "200-299"
-    path = "/health"
-    port = 8080
-    protocol = "HTTP"
-    timeout = 2
-    unhealthy_threshold = 2
+  timeout = 2
+  unhealthy_threshold = 2
   }
 }
 
