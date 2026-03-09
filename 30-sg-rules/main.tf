@@ -363,7 +363,7 @@ resource "aws_security_group_rule" "bastion_laptop" {
   from_port         = 8080
   protocol          = "tcp"
   to_port           = 8080
-}
+} */
 
 resource "aws_security_group_rule" "user_payment" {
   type              = "ingress"
@@ -381,4 +381,4 @@ resource "aws_security_group_rule" "cart_payment" {
   from_port         = 8080
   protocol          = "tcp"
   to_port           = 8080
-} */
+} 
